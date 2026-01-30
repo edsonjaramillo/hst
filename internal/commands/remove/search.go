@@ -19,7 +19,7 @@ var searchCommand = &cli.Command{
 func searchAction(_ context.Context, command *cli.Command) error {
 	commands := atuin.GetCommandsSortedByFrequency()
 
-	choices := gum.FilterNoLimit(commands)
+	choices := gum.FilterNoLimit(commands, false)
 
 	atuin.DeleteCommands(choices)
 

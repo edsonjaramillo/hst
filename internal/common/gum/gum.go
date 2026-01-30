@@ -12,13 +12,22 @@ func Choose(choices []string) []string {
 }
 
 // Filter filters the given choices using gum's interactive filter.
-func Filter(choices []string) []string {
-	parts := append([]string{"filter"}, choices...)
+func Filter(choices []string, allSelected bool) []string {
+	parts := []string{"filter"}
+	if allSelected {
+		parts = append(parts, "--selected=*")
+	}
+	parts = append(parts, choices...)
 	return shell.CmdInteractive("gum", parts...)
 }
 
 // FilterNoLimit filters choices without limiting the number of results displayed.
-func FilterNoLimit(choices []string) []string {
-	parts := append([]string{"filter", "--no-limit"}, choices...)
+func FilterNoLimit(choices []string, allSelected bool) []string {
+	parts := []string{"filter", "--no-limit"}
+	if allSelected {
+		parts = append(parts, "--selected=*")
+	}
+	parts = append(parts, choices...)
+
 	return shell.CmdInteractive("gum", parts...)
 }
