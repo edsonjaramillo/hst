@@ -17,6 +17,6 @@ var Command = &cli.Command{
 
 // action syncs atuin history to the $HISTFILE and removes error commands.
 func action(_ context.Context, command *cli.Command) error {
-	atuin.DeleteErrorCommands()
+	atuin.SyncHistory()
 	return nil
 }

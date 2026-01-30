@@ -56,15 +56,40 @@ func DeleteErrorCommands() {
 	}
 }
 
+// FileExists checks if a file exists at the given filepath.
+func FileExists(filepath string) bool {
+	_, err := os.Stat(filepath)
+	return err == nil
+}
+
 // SyncHistory syncs atuin history to the file specified by $HISTFILE.
 func SyncHistory() {
-	histfile := os.Getenv("HISTFILE")
-	if histfile == "" {
-		shell.Exit("atuin: HISTFILE is not set")
+	home, homeDirErr := os.UserHomeDir()
+	if homeDirErr != nil {
+		shell.Exit("atuin: could not determine home directory: ")
 	}
 
-	err := shell.Cmd("atuin", "history", "list", "--format", "{command}", ">", histfile).Run()
+	zshHistoryFile := home + "/.zsh_history"
+	if !FileExists(zshHistoryFile) {
+		shell.Exit("atuin: zsh history file does not exist: " + zshHistoryFile)
+	}
+
+	output := shell.CmdInteractive("atuin", "history", "list", "--format", "{command}")
+
+	file, err := os.Create(zshHistoryFile)
 	if err != nil {
-		shell.Exit("atuin: could not sync history: ")
+		shell.Exit("atuin: could not create history file: " + err.Error())
+	}
+	defer func() {
+		if closeErr := file.Close(); closeErr != nil && err == nil {
+			err = closeErr
+		}
+	}()
+
+	for _, line := range output {
+		_, writeErr := file.WriteString(line + "\n")
+		if writeErr != nil {
+			shell.Exit("atuin: could not write to history file.")
+		}
 	}
 }
