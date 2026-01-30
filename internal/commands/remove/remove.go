@@ -6,8 +6,8 @@ import (
 )
 
 var Command = &cli.Command{
-	Name:  "delete",
-	Usage: "delete commands from atuin history",
+	Name:  "remove",
+	Usage: "remove commands from atuin history",
 	Commands: []*cli.Command{
 		searchCommand,
 		errorsCommand,
