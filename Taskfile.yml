@@ -28,6 +28,9 @@ tasks:
   errors:
     cmd: go run {{.MAIN}} delete errors
     silent: true
+  fewer:
+    cmd: go run {{.MAIN}} remove fewer 2
+    silent: true
   sync:
     cmd: go run {{.MAIN}} sync
     silent: true

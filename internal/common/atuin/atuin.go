@@ -38,6 +38,22 @@ func GetCommandsSortedByFrequency() []string {
 	return uniqueCommands
 }
 
+func GetCommandWithMaxFrequency(commands []string, fewerThan int) []string {
+	frequency := make(map[string]int)
+	for _, cmd := range commands {
+		frequency[cmd]++
+	}
+
+	commandsToDelete := []string{}
+	for cmd, freq := range frequency {
+		if freq <= fewerThan {
+			commandsToDelete = append(commandsToDelete, cmd)
+		}
+	}
+
+	return commandsToDelete
+}
+
 // DeleteCommands deletes the given commands from atuin history.
 func DeleteCommands(commands []string) {
 	for _, command := range commands {

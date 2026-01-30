@@ -11,5 +11,6 @@ var Command = &cli.Command{
 	Commands: []*cli.Command{
 		searchCommand,
 		errorsCommand,
+		fewerCommand,
 	},
 }
