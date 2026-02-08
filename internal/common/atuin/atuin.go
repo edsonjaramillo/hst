@@ -2,8 +2,11 @@
 package atuin
 
 import (
+	"bufio"
 	"os"
+	"path/filepath"
 	"sort"
+	"strings"
 
 	"edsonjaramillo/hst/internal/common/shell"
 )
@@ -80,17 +83,17 @@ func FileExists(filepath string) bool {
 
 // SyncHistory syncs atuin history to the file specified by $HISTFILE.
 func SyncHistory() {
-	home, homeDirErr := os.UserHomeDir()
-	if homeDirErr != nil {
-		shell.Exit("atuin: could not determine home directory: ")
+	zshHistoryFile, err := getHistoryFilePath()
+	if err != nil {
+		shell.Exit("atuin: could not determine history file path: " + err.Error())
 	}
 
-	zshHistoryFile := home + "/.zsh_history"
 	if !FileExists(zshHistoryFile) {
 		shell.Exit("atuin: zsh history file does not exist: " + zshHistoryFile)
 	}
 
 	output := shell.CmdInteractive("atuin", "history", "list", "--format", "{command}")
+	uniqueCommands := uniqueNonEmptyCommands(output)
 
 	file, err := os.Create(zshHistoryFile)
 	if err != nil {
@@ -102,10 +105,56 @@ func SyncHistory() {
 		}
 	}()
 
-	for _, line := range output {
-		_, writeErr := file.WriteString(line + "\n")
+	writer := bufio.NewWriter(file)
+
+	for _, line := range uniqueCommands {
+		_, writeErr := writer.WriteString(line + "\n")
 		if writeErr != nil {
 			shell.Exit("atuin: could not write to history file.")
 		}
 	}
+
+	if flushErr := writer.Flush(); flushErr != nil {
+		shell.Exit("atuin: could not flush history file.")
+	}
+}
+
+func getHistoryFilePath() (string, error) {
+	historyFile := strings.TrimSpace(os.Getenv("HISTFILE"))
+	if historyFile == "" {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return "", err
+		}
+		return filepath.Join(home, ".zsh_history"), nil
+	}
+
+	if strings.HasPrefix(historyFile, "~") {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return "", err
+		}
+		historyFile = filepath.Join(home, strings.TrimPrefix(historyFile, "~"))
+	}
+
+	return historyFile, nil
+}
+
+func uniqueNonEmptyCommands(commands []string) []string {
+	seen := make(map[string]struct{}, len(commands))
+	unique := make([]string, 0, len(commands))
+
+	for _, cmd := range commands {
+		cleaned := strings.TrimSpace(strings.ReplaceAll(cmd, "\n", " "))
+		if cleaned == "" {
+			continue
+		}
+		if _, exists := seen[cleaned]; exists {
+			continue
+		}
+		seen[cleaned] = struct{}{}
+		unique = append(unique, cleaned)
+	}
+
+	return unique
 }
