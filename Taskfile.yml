@@ -1,0 +1,65 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+version: '3'
+
+vars:
+  MAIN: ./cmd/hst
+  BIN_DIR: ~/.local/bin
+  EXECUTABLE: hst
+  VERSION: dev
+
+tasks:
+  default:
+    cmd: go run {{.MAIN}} {{.CLI_ARGS}}
+    silent: true
+
+  build:
+    cmds:
+      - mkdir -p {{.BIN_DIR}}
+      - go build -ldflags="-s -w -X github.com/edsonjaramillo/hst/internal/cli.Version={{.VERSION}}" -o {{.BIN_DIR}}/{{.EXECUTABLE}} {{.MAIN}}
+    silent: true
+
+  test:
+    cmd: go test ./...
+    silent: true
+
+  lint:
+    cmd: golangci-lint run ./...
+    silent: true
+
+  format:
+    cmds:
+      - |
+        if command -v gofumpt >/dev/null 2>&1; then
+          gofumpt -l -w .
+        else
+          go fmt ./...
+        fi
+    silent: true
+
+  remove-search:
+    cmd: go run {{.MAIN}} remove search
+    silent: true
+
+  remove-errors:
+    cmd: go run {{.MAIN}} remove errors
+    silent: true
+
+  remove-fewer:
+    cmd: go run {{.MAIN}} remove fewer {{.CLI_ARGS}}
+    silent: true
+
+  sync:
+    cmd: go run {{.MAIN}} sync
+    silent: true
+
+  completion-zsh:
+    cmd: go run {{.MAIN}} completion zsh
+    silent: true
+
+  completion-bash:
+    cmd: go run {{.MAIN}} completion bash
+    silent: true
+
+  completion-fish:
+    cmd: go run {{.MAIN}} completion fish
+    silent: true
